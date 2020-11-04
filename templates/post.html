@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<main role="main" class="container"></main>
+
+{% include 'block_author.html' %}
+
+        <div class="col-md-9"> 
+            {% include "post_item.html" with post=post %}
+            {% include 'comments.html' %}
+        </div>
+
+</main>
+{% endblock %}
