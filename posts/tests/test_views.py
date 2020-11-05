@@ -221,3 +221,5 @@ class StaticViewTests(TestCase):
                 'Это текст публикации',
                 msg_prefix='Кэш работает не правильно'
                 )
+
+    #def test_follow(self):
