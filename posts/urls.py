@@ -29,4 +29,9 @@ urlpatterns = [
         views.add_comment,
         name="add_comment"
         ),
+    path(
+        '<str:username>/<int:post_id>/delete/',
+        views.post_delete,
+        name='post_delete'
+        ),
     ]
