@@ -13,9 +13,12 @@ class StaticViewTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = User.objects.create_user(username='StasBasov')
+        cls.author = User.objects.create_user(username='IvanIvanov')
         cls.authorized_client = Client()
         cls.authorized_client.force_login(cls.user)
         cls.unauthorized_client = Client()
+        cls.authorized_client2 = Client()
+        cls.authorized_client2.force_login(cls.author)
 
     def create_post(self, title, slug, text):
         """auxiliary method for creating a test post and group"""
@@ -222,4 +225,67 @@ class StaticViewTests(TestCase):
                 msg_prefix='Кэш работает не правильно'
                 )
 
-    #def test_follow(self):
+    def test_follow(self):
+        following_user = self.user.follower.count()
+        author = self.author.username
+        self.authorized_client.get(reverse("profile_follow", kwargs={'username': author}))
+        self.assertEqual(
+            self.user.follower.count(),
+            following_user + 1,
+            'Функция подписки работает неправильно'
+            )
+
+    def test_cache(self):
+        """checks the cache operation"""
+        post = self.authorized_client.post(
+            reverse('new_post'), {'text': 'Это текст публикации'}, follow=True
+            )
+        self.assertNotContains(
+                self.authorized_client.get(reverse('index')),
+                'Это текст публикации',
+                msg_prefix='Кэш не работает'
+                )
+        cache.clear()
+        self.assertContains(
+                self.authorized_client.get(reverse('index')),
+                'Это текст публикации',
+                msg_prefix='Кэш работает не правильно'
+                )
+
+    def test_follow(self):
+        following_user = self.user.follower.count()
+        author = self.author.username
+        self.authorized_client.get(reverse("profile_follow", kwargs={'username': author}))
+        self.assertEqual(
+            self.user.follower.count(),
+            following_user + 1,
+            'Функция подписки работает неправильно')
+
+        post = self.authorized_client2.post(
+            reverse('new_post'), {'text': 'Текст автора'}, follow=True
+        )
+        cache.clear()
+        self.assertContains(
+            self.authorized_client.get(reverse("follow_index")),
+            'Текст автора',
+            msg_prefix='Пост автора не появляется у подписчиков в ленте'
+        )
+
+        following_user = self.user.follower.count()
+        self.authorized_client.get(reverse("profile_unfollow", kwargs={'username': author}))
+        self.assertEqual(
+            self.user.follower.count(),
+            following_user - 1,
+            'Функция отписки работает неправильно')
+
+        cache.clear()
+        self.assertNotContains(
+            self.authorized_client.get(reverse("follow_index")),
+            'Текст автора',
+            msg_prefix='Пост автора появляется не только у подписчиков'
+        )
+
+    def test_comment(self):
+        response = self.unauthorized_client.post(
+            reverse('add_comment', {})
+        )
