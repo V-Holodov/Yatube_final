@@ -30,7 +30,7 @@ class Post(models.Model):
         blank=True, null=True,
         related_name="posts"
         )
-    image = models.ImageField(upload_to='media/', blank=True, null=True)
+    image = models.ImageField(upload_to='posts/', blank=True, null=True)
 
     class Meta:
         ordering = ['-pub_date']
@@ -40,7 +40,9 @@ class Post(models.Model):
 
 
 class Comment(models.Model):
+
     """comment linked to the post and author"""
+
     post = models.ForeignKey(
         Post, on_delete=models.CASCADE,
         related_name="comments"
@@ -57,7 +59,13 @@ class Comment(models.Model):
 
 
 class Follow(models.Model):
-    """"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='follower')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
-  
+
+    """the follow system on the author"""
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='follower')
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='following')
+
+    class Meta:
+        unique_together = ['user', 'author']

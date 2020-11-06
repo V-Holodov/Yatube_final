@@ -179,7 +179,7 @@ class StaticViewTests(TestCase):
             )
 
     def test_image_not_graphic_format(self):
-        """checking the availability of uploading images in a non-graphic format"""
+        """the availability of uploading images in a non-graphic format"""
         title = 'Тестовая группа',
         slug = 'testgroup'
         text = 'Это текст публикации'
@@ -203,10 +203,10 @@ class StaticViewTests(TestCase):
             )
         cache.clear()
         self.assertNotContains(
-                self.authorized_client.get('/'),
-                "<img",
-                msg_prefix='Защита от загрузки файлов не-графических форматов не работает'
-                )
+            self.authorized_client.get('/'),
+            "<img",
+            msg_prefix='Защита от загрузки не-графических форматов не работает'
+            )
 
     def test_cache(self):
         """checks the cache operation"""
@@ -228,7 +228,9 @@ class StaticViewTests(TestCase):
     def test_follow(self):
         following_user = self.user.follower.count()
         author = self.author.username
-        self.authorized_client.get(reverse("profile_follow", kwargs={'username': author}))
+        self.authorized_client.get(
+            reverse("profile_follow", kwargs={'username': author})
+            )
         self.assertEqual(
             self.user.follower.count(),
             following_user + 1,
@@ -253,9 +255,12 @@ class StaticViewTests(TestCase):
                 )
 
     def test_follow(self):
+        """"""
         following_user = self.user.follower.count()
         author = self.author.username
-        self.authorized_client.get(reverse("profile_follow", kwargs={'username': author}))
+        self.authorized_client.get(
+            reverse("profile_follow", kwargs={'username': author})
+            )
         self.assertEqual(
             self.user.follower.count(),
             following_user + 1,
@@ -272,7 +277,9 @@ class StaticViewTests(TestCase):
         )
 
         following_user = self.user.follower.count()
-        self.authorized_client.get(reverse("profile_unfollow", kwargs={'username': author}))
+        self.authorized_client.get(
+            reverse("profile_unfollow", kwargs={'username': author})
+            )
         self.assertEqual(
             self.user.follower.count(),
             following_user - 1,
@@ -286,6 +293,23 @@ class StaticViewTests(TestCase):
         )
 
     def test_comment(self):
+        """"""
+        post = Post.objects.create(text='Текст поста', author=self.user)
+        post_id = post.id
         response = self.unauthorized_client.post(
-            reverse('add_comment', {})
+            reverse(
+                'add_comment',
+                kwargs={'username': self.user, 'post_id': post_id}
+                ),
+            {'text': 'Текст комментария'}
+        )
+        self.assertNotContains(
+            self.authorized_client.get(
+                reverse(
+                    'post',
+                    kwargs={'username': self.user, 'post_id': post_id}
+                    ),
+                ),
+            'Текст комментария',
+            msg_prefix='Комментарии доступны незарегистрированным пользователю'
         )
