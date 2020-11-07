@@ -27,6 +27,12 @@
             </a>
         </h5>
         <p>{{ item.text | linebreaksbr }}</p>
+        <!-- Ссылка на удаление комментария для автора -->
+        {% if user == item.author %}
+        <a class="btn btn-sm btn-info" href="{% url 'comment_delete' post.author.username post.id item.author.username item.id%}" role="button">
+          Удалить
+        </a>
+        {% endif %}
     </div>
 </div>
 {% endfor %}

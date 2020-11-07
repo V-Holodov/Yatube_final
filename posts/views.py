@@ -172,3 +172,11 @@ def post_delete(request, username, post_id):
     post = get_object_or_404(Post, author__username=username, id=post_id)
     post.delete()
     return redirect('index')
+
+
+@login_required
+def comment_delete(request, username, post_id, author_comment, comment_id):
+    """delete a comment"""
+    comment = get_object_or_404(Comment, author__username=author_comment, id=comment_id)
+    comment.delete()
+    return redirect('post', username=username, post_id=post_id)
