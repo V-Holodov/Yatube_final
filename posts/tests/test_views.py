@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.core.cache import cache
+from PIL import Image
+import tempfile
 
 from posts.models import Post, Group
 
@@ -19,28 +21,17 @@ class StaticViewTests(TestCase):
         cls.unauthorized_client = Client()
         cls.authorized_client2 = Client()
         cls.authorized_client2.force_login(cls.author)
-
-    def create_post(self, title, slug, text):
-        """auxiliary method for creating a test post and group"""
-        username = self.user.username
-        new_group = Group.objects.create(
-            title=title,
-            slug=slug
+        cls.title = 'Тестовая группа',
+        cls.slug = 'testgroup'
+        cls.text = 'Это текст публикации'
+        cls.new_group = Group.objects.create(
+            title=cls.title,
+            slug=cls.slug
             )
-        group_id = new_group.id
-        new_post = Post.objects.create(
-            text=text,
-            author=self.user,
-            group=new_group
-            )
-        post_id = new_post.id
-        return {
-            'username': username,
-            'new_group': new_group,
-            'new_post': new_post,
-            'group_id': group_id,
-            'post_id': post_id
-            }
+        cls.new_post = Post.objects.create(
+            text=cls.text,
+            author=cls.user,
+            group=cls.new_group)
 
     def check_pages(self, username, post_id, slug, text, text_error):
         """auxiliary method for checks on the required pages"""
@@ -93,25 +84,17 @@ class StaticViewTests(TestCase):
 
     def test_show_new_post(self):
         """checks whether an new post exists on the required pages """
-        title = 'Тестовая группа',
-        slug = 'testgroup'
-        text = 'Это текст публикации'
-        dict = self.create_post(title=title, slug=slug, text=text)
         cache.clear()
         self.check_pages(
-            username=dict['username'],
-            post_id=dict['post_id'],
-            slug=slug,
-            text=text,
+            username=self.user.username,
+            post_id=self.new_post.id,
+            slug=self.slug,
+            text=self.text,
             text_error='Новый пост не отображается на требуемых страницах'
             )
 
     def test_show_edit_post(self):
         """checks whether an edited post exists on the required pages"""
-        title = 'Тестовая группа',
-        slug = 'testgroup'
-        text = 'Это текст публикации'
-        dict = self.create_post(title=title, slug=slug, text=text)
         another_group = Group.objects.create(
             title='Другая тестовая группа',
             slug='anothergroup'
@@ -121,8 +104,8 @@ class StaticViewTests(TestCase):
             reverse(
                 'post_edit',
                 kwargs={
-                    'username': dict['username'],
-                    'post_id': dict['post_id']
+                    'username': self.user.username,
+                    'post_id': self.new_post.id
                     }
                 ),
                     {
@@ -133,15 +116,15 @@ class StaticViewTests(TestCase):
             )
         cache.clear()
         self.check_pages(
-            username=dict['username'],
-            post_id=dict['post_id'],
+            username=self.user.username,
+            post_id=self.new_post.id,
             slug='anothergroup',
             text='Это отредактированный текст',
             text_error='Отредактированный пост не отображается на страницах'
             )
         self.assertNotContains(
             self.authorized_client.get(
-                reverse('group_posts', kwargs={'slug': slug})
+                reverse('group_posts', kwargs={'slug': self.slug})
                 ),
             'Это текст публикации',
             msg_prefix='Пост не исчез со страницы исходной группы'
@@ -149,83 +132,86 @@ class StaticViewTests(TestCase):
 
     def test_image(self):
         """checking whether the image is displayed correctly in the template"""
-        title = 'Тестовая группа',
-        slug = 'testgroup'
-        text = 'Это текст публикации'
-        dict = self.create_post(title=title, slug=slug, text=text)
-
-        with open('media/media/imagetest.jpeg', 'rb') as img:
-            edit_post = self.authorized_client.post(
+        img = Image.new("RGB", (100, 100))
+        img.save('img.png')
+        with open('img.png', 'rb') as img:
+            self.authorized_client.post(
                 reverse(
                     'post_edit',
                     kwargs={
-                        'username': dict['username'],
-                        'post_id': dict['post_id']}
+                        'username': self.user.username,
+                        'post_id': self.new_post.id}
                     ),
                     {
                         'text': 'post with image',
-                        'group': dict['group_id'],
+                        'group': self.new_group.id,
                         'image': img
                         },
                 follow=True
-            )
+                )
         cache.clear()
         self.check_pages(
-            username=dict['username'],
-            post_id=dict['post_id'],
-            slug=slug,
+            username=self.user.username,
+            post_id=self.new_post.id,
+            slug=self.slug,
             text="<img",
             text_error='Картинка не отображается правильно'
             )
 
     def test_image_not_graphic_format(self):
         """the availability of uploading images in a non-graphic format"""
-        title = 'Тестовая группа',
-        slug = 'testgroup'
-        text = 'Это текст публикации'
-        dict = self.create_post(title=title, slug=slug, text=text)
-        with open('media/media/test.txt', 'rb') as img:
+        file = open("test.txt", "w")
+        file.write("hello world")
+        file.close()
+        with open('test.txt', 'rb') as img:
             edit_post = self.authorized_client.post(
                 reverse(
                     'post_edit',
                     kwargs={
-                        'username': dict['username'],
-                        'post_id': dict['post_id']
+                        'username': self.user.username,
+                        'post_id': self.new_post.id
                         }
                     ),
-
                     {
                         'text': 'post with image',
-                        'group': dict['group_id'],
+                        'group': self.new_group.id,
                         'image': img
                         },
                 follow=True
             )
         cache.clear()
         self.assertNotContains(
-            self.authorized_client.get('/'),
+            self.authorized_client.get(reverse('index')),
             "<img",
             msg_prefix='Защита от загрузки не-графических форматов не работает'
+            )
+        self.assertFormError(
+            edit_post,
+            'form',
+            'image',
+            'Upload a valid image. The file you uploaded was either not an image or a corrupted image.',
+            'Поле "image" в форме не выдает ошибок при загрузки не изображений'
             )
 
     def test_cache(self):
         """checks the cache operation"""
-        post = self.authorized_client.post(
-            reverse('new_post'), {'text': 'Это текст публикации'}, follow=True
+        self.authorized_client.post(
+            reverse('new_post'), {'text': 'Это тест кэша'}, follow=True
             )
         self.assertNotContains(
-                self.authorized_client.get('/'),
-                'Это текст публикации',
+                self.authorized_client.get(reverse('index')),
+                'Это тест кэша',
                 msg_prefix='Кэш не работает'
                 )
         cache.clear()
         self.assertContains(
-                self.authorized_client.get('/'),
+                self.authorized_client.get(reverse('index')),
                 'Это текст публикации',
                 msg_prefix='Кэш работает не правильно'
                 )
 
     def test_follow(self):
+        """operation of the 'follow' system"""
         following_user = self.user.follower.count()
         author = self.author.username
         self.authorized_client.get(
@@ -236,36 +222,6 @@ class StaticViewTests(TestCase):
             following_user + 1,
             'Функция подписки работает неправильно'
             )
-
-    def test_cache(self):
-        """checks the cache operation"""
-        post = self.authorized_client.post(
-            reverse('new_post'), {'text': 'Это текст публикации'}, follow=True
-            )
-        self.assertNotContains(
-                self.authorized_client.get(reverse('index')),
-                'Это текст публикации',
-                msg_prefix='Кэш не работает'
-                )
-        cache.clear()
-        self.assertContains(
-                self.authorized_client.get(reverse('index')),
-                'Это текст публикации',
-                msg_prefix='Кэш работает не правильно'
-                )
-
-    def test_follow(self):
-        """"""
-        following_user = self.user.follower.count()
-        author = self.author.username
-        self.authorized_client.get(
-            reverse("profile_follow", kwargs={'username': author})
-            )
-        self.assertEqual(
-            self.user.follower.count(),
-            following_user + 1,
-            'Функция подписки работает неправильно')
-
         post = self.authorized_client2.post(
             reverse('new_post'), {'text': 'Текст автора'}, follow=True
         )
@@ -276,6 +232,12 @@ class StaticViewTests(TestCase):
             msg_prefix='Пост автора не появляется у подписчиков в ленте'
         )
 
+    def test_unfollow(self):
+        """operation of the 'unfollow' system"""
+        author = self.author.username
+        self.authorized_client.get(
+            reverse("profile_follow", kwargs={'username': author})
+            )
         following_user = self.user.follower.count()
         self.authorized_client.get(
             reverse("profile_unfollow", kwargs={'username': author})
@@ -284,7 +246,9 @@ class StaticViewTests(TestCase):
             self.user.follower.count(),
             following_user - 1,
             'Функция отписки работает неправильно')
-
+        post = self.authorized_client2.post(
+            reverse('new_post'), {'text': 'Текст автора'}, follow=True
+        )
         cache.clear()
         self.assertNotContains(
             self.authorized_client.get(reverse("follow_index")),
@@ -293,23 +257,39 @@ class StaticViewTests(TestCase):
         )
 
     def test_comment(self):
-        """"""
+        """adding comments by different users"""
         post = Post.objects.create(text='Текст поста', author=self.user)
-        post_id = post.id
-        response = self.unauthorized_client.post(
+        self.authorized_client.post(
             reverse(
                 'add_comment',
-                kwargs={'username': self.user, 'post_id': post_id}
+                kwargs={'username': self.user, 'post_id': post.id}
                 ),
-            {'text': 'Текст комментария'}
+            {'text': 'Текст авторизованного пользователя'}
+        )
+        self.assertContains(
+            self.authorized_client.get(
+                reverse(
+                    'post',
+                    kwargs={'username': self.user, 'post_id': post.id}
+                    ),
+                ),
+            'Текст авторизованного пользователя',
+            msg_prefix='Зарегистрированный пользователь не может оставить комментарий'
+        )
+        self.unauthorized_client.post(
+            reverse(
+                'add_comment',
+                kwargs={'username': self.user, 'post_id': post.id}
+                ),
+            {'text': 'Текст неавторизованного пользователя'}
         )
         self.assertNotContains(
             self.authorized_client.get(
                 reverse(
                     'post',
-                    kwargs={'username': self.user, 'post_id': post_id}
+                    kwargs={'username': self.user, 'post_id': post.id}
                     ),
                 ),
-            'Текст комментария',
+            'Текст неавторизованного пользователя',
             msg_prefix='Комментарии доступны незарегистрированным пользователю'
         )

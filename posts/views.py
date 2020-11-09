@@ -123,7 +123,7 @@ def server_error(request):
 @login_required
 def add_comment(request, username, post_id):
     """adds a new comment to the post"""
-    post = Post.objects.get(id=post_id)
+    post = get_object_or_404(Post, author__username=username, id=post_id)
     form = CommentForm(request.POST or None)
     if form.is_valid():
         new_comment = form.save(commit=False)

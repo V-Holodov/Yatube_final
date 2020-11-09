@@ -24,3 +24,6 @@ db.sqlite3
 .vscode/
 
 sent_emails/
+
+img.png
+test.txt
