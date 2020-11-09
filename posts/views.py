@@ -137,9 +137,7 @@ def add_comment(request, username, post_id):
 def follow_index(request):
     """the display of the ribbon with the tracked records of the authors"""
     user = request.user
-    user_follow = Follow.objects.filter(user=user)
-    authors = User.objects.filter(following__in=user_follow)
-    latest = Post.objects.filter(author__in=authors)
+    latest = Post.objects.filter(author__following__user=user)
     paginator = Paginator(latest, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
@@ -160,8 +158,7 @@ def profile_follow(request, username):
 def profile_unfollow(request, username):
     """stops following the author"""
     user = request.user
-    author = User.objects.get(username=username)
-    follow = Follow.objects.filter(author=author, user=user)
+    follow = Follow.objects.filter(author__username=username, user=user)
     follow.delete()
     return redirect('profile', username=username)
 

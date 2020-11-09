@@ -3,18 +3,14 @@
 {% block content %}
 <br>
 <main role="main" class="container"></main>
-
+<div class="row">
 {% include 'block_author.html' %}
 
             <div class="col-md-9">                
 
-                <!-- Начало блока с отдельным постом -->
                 {% for post in page %} 
                     {% include "post_item.html" with post=post %}
-                <!-- Конец блока с отдельным постом --> 
                 {% endfor %}
-
-                <!-- Остальные посты -->  
 
                 {% if page.has_other_pages %}
                     {% include "paginator.html" with items=page paginator=paginator%}

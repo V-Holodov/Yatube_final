@@ -3,7 +3,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.core.cache import cache
 from PIL import Image
-import tempfile
+import os
 
 from posts.models import Post, Group
 
@@ -157,6 +157,7 @@ class StaticViewTests(TestCase):
             text="<img",
             text_error='Картинка не отображается правильно'
             )
+        os.remove('img.png')
 
     def test_image_not_graphic_format(self):
         """the availability of uploading images in a non-graphic format"""
@@ -192,6 +193,7 @@ class StaticViewTests(TestCase):
             'Upload a valid image. The file you uploaded was either not an image or a corrupted image.',
             'Поле "image" в форме не выдает ошибок при загрузки не изображений'
             )
+        os.remove('test.txt')
 
     def test_cache(self):
         """checks the cache operation"""

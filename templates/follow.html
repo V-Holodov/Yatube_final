@@ -6,7 +6,6 @@
         {% include "menu.html" with follow=True %}
 
            <h1> Ваша лента</h1>
-            <!-- Вывод ленты записей -->
         {% load cache %}
         {% cache 20 index_page %}
 
@@ -17,7 +16,6 @@
         {% endcache %}
     </div>
 
-        <!-- Вывод паджинатора -->
         {% if page.has_other_pages %}
             {% include "paginator.html" with items=page paginator=paginator%}
         {% endif %}
