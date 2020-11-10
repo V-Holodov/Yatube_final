@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.core.cache import cache
 from PIL import Image
 import os
+import tempfile
 
 from posts.models import Post, Group
 
@@ -161,10 +162,9 @@ class StaticViewTests(TestCase):
 
     def test_image_not_graphic_format(self):
         """the availability of uploading images in a non-graphic format"""
-        file = open("test.txt", "w")
-        file.write("hello world")
-        file.close()
-        with open('test.txt', 'rb') as img:
+        with tempfile.TemporaryFile(mode='w+b', suffix='.txt') as img:
+            img.write(b'Hello world!')
+            img.seek(0)
             edit_post = self.authorized_client.post(
                 reverse(
                     'post_edit',
@@ -179,21 +179,21 @@ class StaticViewTests(TestCase):
                         'image': img
                         },
                 follow=True
-            )
-        cache.clear()
-        self.assertNotContains(
-            self.authorized_client.get(reverse('index')),
-            "<img",
-            msg_prefix='Защита от загрузки не-графических форматов не работает'
-            )
-        self.assertFormError(
-            edit_post,
-            'form',
-            'image',
-            'Upload a valid image. The file you uploaded was either not an image or a corrupted image.',
-            'Поле "image" в форме не выдает ошибок при загрузки не изображений'
-            )
-        os.remove('test.txt')
+                )
+            cache.clear()
+            self.assertNotContains(
+                self.authorized_client.get(reverse('index')),
+                "<img",
+                msg_prefix='Защита от загрузки неизображений не работает'
+                )
+            self.assertFormError(
+                edit_post,
+                'form',
+                'image',
+                'Upload a valid image. The file you uploaded was either not an image or a corrupted image.',
+                'Поле "image" в форме не выдает ошибок при загрузки не изображений'
+                )
+        img.close()
 
     def test_cache(self):
         """checks the cache operation"""
@@ -224,6 +224,13 @@ class StaticViewTests(TestCase):
             following_user + 1,
             'Функция подписки работает неправильно'
             )
+
+    def test_follow_post(self):
+        """displaying a post in the subscription feed"""
+        author = self.author.username
+        self.authorized_client.get(
+            reverse("profile_follow", kwargs={'username': author})
+            )
         post = self.authorized_client2.post(
             reverse('new_post'), {'text': 'Текст автора'}, follow=True
         )
@@ -248,9 +255,19 @@ class StaticViewTests(TestCase):
             self.user.follower.count(),
             following_user - 1,
             'Функция отписки работает неправильно')
+
+    def test_unfollow_post(self):
+        """displaying a post in the subscription feed after unfollow"""
+        author = self.author.username
+        self.authorized_client.get(
+            reverse("profile_follow", kwargs={'username': author})
+            )
         post = self.authorized_client2.post(
             reverse('new_post'), {'text': 'Текст автора'}, follow=True
         )
+        self.authorized_client.get(
+            reverse("profile_unfollow", kwargs={'username': author})
+            )
         cache.clear()
         self.assertNotContains(
             self.authorized_client.get(reverse("follow_index")),
@@ -258,8 +275,8 @@ class StaticViewTests(TestCase):
             msg_prefix='Пост автора появляется не только у подписчиков'
         )
 
-    def test_comment(self):
-        """adding comments by different users"""
+    def test_comment_authorized_user(self):
+        """adding comments to authorized users"""
         post = Post.objects.create(text='Текст поста', author=self.user)
         self.authorized_client.post(
             reverse(
@@ -276,8 +293,12 @@ class StaticViewTests(TestCase):
                     ),
                 ),
             'Текст авторизованного пользователя',
-            msg_prefix='Зарегистрированный пользователь не может оставить комментарий'
+            msg_prefix='авторизованный user не может оставить комментарий'
         )
+
+    def test_comment_unauthorized_user(self):
+        """adding comments to unauthorized users"""
+        post = Post.objects.create(text='Текст поста', author=self.user)
         self.unauthorized_client.post(
             reverse(
                 'add_comment',
