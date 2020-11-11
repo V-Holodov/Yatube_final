@@ -6,14 +6,11 @@
         {% include "menu.html" with follow=True %}
 
            <h1> Ваша лента</h1>
-        {% load cache %}
-        {% cache 20 index_page %}
 
         {% for post in page %}
             {% include "post_item.html" with post=post %}
         {% endfor %}
         
-        {% endcache %}
     </div>
 
         {% if page.has_other_pages %}

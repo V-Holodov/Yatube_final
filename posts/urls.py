@@ -39,4 +39,9 @@ urlpatterns = [
         views.comment_delete,
         name="comment_delete"
         ),
+    path(
+        "<str:search_query>/search",
+        views.search_post,
+        name="search_post"
+        ),
     ]

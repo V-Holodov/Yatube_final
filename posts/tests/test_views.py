@@ -133,9 +133,13 @@ class StaticViewTests(TestCase):
 
     def test_image(self):
         """checking whether the image is displayed correctly in the template"""
-        img = Image.new("RGB", (100, 100))
-        img.save('img.png')
-        with open('img.png', 'rb') as img:
+        with tempfile.TemporaryFile(mode='w+b', suffix='.gif') as img:
+            img.write(            
+                b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x00\x00\x00\x21\xf9\x04'
+                b'\x01\x0a\x00\x01\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02'
+                b'\x02\x4c\x01\x00\x3b'
+                )
+            img.seek(0)
             self.authorized_client.post(
                 reverse(
                     'post_edit',
@@ -150,15 +154,15 @@ class StaticViewTests(TestCase):
                         },
                 follow=True
                 )
-        cache.clear()
-        self.check_pages(
-            username=self.user.username,
-            post_id=self.new_post.id,
-            slug=self.slug,
-            text="<img",
-            text_error='Картинка не отображается правильно'
-            )
-        os.remove('img.png')
+            cache.clear()
+            self.check_pages(
+                username=self.user.username,
+                post_id=self.new_post.id,
+                slug=self.slug,
+                text="<img",
+                text_error='Картинка не отображается правильно'
+                )
+
 
     def test_image_not_graphic_format(self):
         """the availability of uploading images in a non-graphic format"""
@@ -193,7 +197,6 @@ class StaticViewTests(TestCase):
                 'Upload a valid image. The file you uploaded was either not an image or a corrupted image.',
                 'Поле "image" в форме не выдает ошибок при загрузки не изображений'
                 )
-        img.close()
 
     def test_cache(self):
         """checks the cache operation"""

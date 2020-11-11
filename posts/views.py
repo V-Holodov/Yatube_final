@@ -1,4 +1,5 @@
 from django import forms
+from django.http import request
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -6,8 +7,9 @@ from django.core.paginator import Paginator
 
 from .models import Post, Group, User, Comment, Follow
 from .forms import PostForm, CommentForm
+from django.views.decorators.cache import cache_page
 
-
+@cache_page(1 * 20, key_prefix="index_page")
 def index(request):
     """home page with a list of posts"""
     latest = Post.objects.order_by("-pub_date").all()
@@ -155,6 +157,7 @@ def profile_follow(request, username):
 
 
 @login_required
+@cache_page(1 * 20, key_prefix="index_page")
 def profile_unfollow(request, username):
     """stops following the author"""
     user = request.user
@@ -177,3 +180,15 @@ def comment_delete(request, username, post_id, author_comment, comment_id):
     comment = get_object_or_404(Comment, author__username=author_comment, id=comment_id)
     comment.delete()
     return redirect('post', username=username, post_id=post_id)
+
+def search_post(request, search_query):
+    """"""
+    latest = Post.objects.order_by("-pub_date").filter(text__icontains=search_query)
+    paginator = Paginator(latest, 10)
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)
+    return render(
+        request,
+        "search_list.html",
+        {"page": page, "paginator": paginator}
+        )
