@@ -181,14 +181,23 @@ def comment_delete(request, username, post_id, author_comment, comment_id):
     comment.delete()
     return redirect('post', username=username, post_id=post_id)
 
-def search_post(request, search_query):
+
+def search_post(request):
     """"""
-    latest = Post.objects.order_by("-pub_date").filter(text__icontains=search_query)
-    paginator = Paginator(latest, 10)
-    page_number = request.GET.get('page')
-    page = paginator.get_page(page_number)
-    return render(
-        request,
-        "search_list.html",
-        {"page": page, "paginator": paginator}
-        )
+    search_query = request.GET.get('search_query')
+    if search_query != "":
+        latest = Post.objects.order_by("-pub_date").filter(text__icontains=search_query)
+        paginator = Paginator(latest, 20)
+        page_number = request.GET.get('page')
+        page = paginator.get_page(page_number)
+        return render(
+            request,
+            "search_results.html",
+            {"page": page, "paginator": paginator, "search": True}
+            )
+    else:
+        return render(
+            request,
+            "search_results.html",
+            {"text": "Пустой запрос", "search": False}
+            )

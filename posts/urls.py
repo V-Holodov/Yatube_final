@@ -8,6 +8,11 @@ urlpatterns = [
     path("group/<slug:slug>", views.group_posts, name="group_posts"),
     path("follow/", views.follow_index, name="follow_index"),
     path(
+        "search/",
+        views.search_post,
+        name="search_post"
+        ),
+    path(
         "<str:username>/follow/",
         views.profile_follow,
         name="profile_follow"
@@ -38,10 +43,5 @@ urlpatterns = [
         "<str:username>/<int:post_id>/<str:author_comment>/<int:comment_id>/comment_delete/",
         views.comment_delete,
         name="comment_delete"
-        ),
-    path(
-        "<str:search_query>/search",
-        views.search_post,
-        name="search_post"
         ),
     ]
