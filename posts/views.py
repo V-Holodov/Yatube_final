@@ -1,13 +1,13 @@
 from django import forms
 from django.http import request
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.core.paginator import Paginator
+from django.views.decorators.cache import cache_page
 
 from .models import Post, Group, User, Comment, Follow
 from .forms import PostForm, CommentForm
-from django.views.decorators.cache import cache_page
 
 @cache_page(1 * 20, key_prefix="index_page")
 def index(request):
@@ -40,7 +40,7 @@ def group_posts(request, slug):
 @login_required
 def new_post(request):
     """creating a new post by an authorized user"""
-    form = PostForm(request.POST or None)
+    form = PostForm(request.POST or None, files=request.FILES or None)
     if form.is_valid():
         new_post = form.save(commit=False)
         new_post.author = request.user
@@ -75,9 +75,11 @@ def profile(request, username):
 
 
 def post_view(request, username, post_id):
-    """displaying a message, comment form, and list of comments"""
+    """displaying a post, comment form, and list of comments"""
     post = get_object_or_404(Post, author__username=username, id=post_id)
     author = post.author
+    follower = author.follower.count()
+    following = author.following.count()
     comments = Comment.objects.select_related('author', 'post').filter(post_id=post_id)
     form = CommentForm()
     return render(
@@ -87,7 +89,10 @@ def post_view(request, username, post_id):
             'author': author,
             'post': post,
             'comments': comments,
-            'form': form
+            'form': form,
+            'follower': follower,
+            'following': following,
+            'item': True
             }
         )
 
@@ -179,22 +184,30 @@ def comment_delete(request, username, post_id, author_comment, comment_id):
     """delete a comment"""
     comment = get_object_or_404(Comment, author__username=author_comment, id=comment_id)
     comment.delete()
+    messages.success(request, 'Profile updated successfully')
     return redirect('post', username=username, post_id=post_id)
 
 
 def search_post(request):
-    """"""
+    """Search for a post by the content of the 'text' field"""
     search_query = request.GET.get('search_query')
     if search_query != "":
         latest = Post.objects.order_by("-pub_date").filter(text__icontains=search_query)
-        paginator = Paginator(latest, 20)
-        page_number = request.GET.get('page')
-        page = paginator.get_page(page_number)
-        return render(
-            request,
-            "search_results.html",
-            {"page": page, "paginator": paginator, "search": True}
-            )
+        if latest.exists():
+            paginator = Paginator(latest, 20)
+            page_number = request.GET.get('page')
+            page = paginator.get_page(page_number)
+            return render(
+                request,
+                "search_results.html",
+                {"page": page, "paginator": paginator, "search": True}
+                )
+        else:
+            return render(
+                request,
+                "search_results.html",
+                {"text": "По Вашему запросу ничего не найдено.", "search": False}
+                )
     else:
         return render(
             request,

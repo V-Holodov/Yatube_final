@@ -21,14 +21,14 @@
       {% if post.comments.exists %}
         Комментариев: {{ post.comments.count }}
       {% endif %}
-            
+
       <div class="d-flex justify-content-between align-items-center">
         <div class="btn-group">
-
+          
           <a class="btn btn-sm btn-primary" href="{% url 'post' post.author.username post.id %}" role="button">
             Добавить комментарий
           </a>
-  
+
           {% if user == post.author %}
           <a class="btn btn-sm btn-info" href="{% url 'post_edit' post.author.username post.id %}" role="button">
             Редактировать
@@ -43,7 +43,7 @@
         </div>
 
   
-        <small class="text-muted">{{ post.pub_date }}</small>
+        <small class="text-muted">{{ post.pub_date|date:"j F Y"}}, {{ post.pub_date|time:"H:i"}}</small>
       </div>
     </div>
   </div>

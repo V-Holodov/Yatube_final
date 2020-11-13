@@ -6,16 +6,16 @@
 <div class="row">
 {% include 'block_author.html' %}
 
-            <div class="col-md-9">                
+    <div class="col-md-9">                
 
-                {% for post in page %} 
-                    {% include "post_item.html" with post=post %}
-                {% endfor %}
+        {% for post in page %} 
+            {% include "post_item.html" with post=post %}
+        {% endfor %}
 
-                {% if page.has_other_pages %}
-                    {% include "paginator.html" with items=page paginator=paginator%}
-                {% endif %}
+        {% if page.has_other_pages %}
+            {% include "paginator.html" with items=page paginator=paginator%}
+        {% endif %}
      </div>
-    </div>
+</div>
 </main>
 {% endblock %}

@@ -54,6 +54,9 @@ class Comment(models.Model):
     text = models.TextField(validators=[validate_not_empty])
     created = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['created']
+
     def __str__(self):
         return self.text
 

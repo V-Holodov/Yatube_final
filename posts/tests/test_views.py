@@ -133,7 +133,7 @@ class StaticViewTests(TestCase):
 
     def test_image(self):
         """checking whether the image is displayed correctly in the template"""
-        with tempfile.TemporaryFile(mode='w+b', suffix='.gif') as img:
+        with tempfile.NamedTemporaryFile(mode='w+b', suffix='.gif') as img:
             img.write(            
                 b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x00\x00\x00\x21\xf9\x04'
                 b'\x01\x0a\x00\x01\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02'

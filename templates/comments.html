@@ -24,12 +24,14 @@
                 {{ item.author.username }}
             </a>
         </h5>
+        <small class="text-muted">{{ item.created|date:"j F Y"}}, {{ item.created|time:"H:i"}}</small>
         <p>{{ item.text | linebreaksbr }}</p>
         {% if user == item.author %}
         <a class="btn btn-sm btn-info" href="{% url 'comment_delete' post.author.username post.id item.author.username item.id%}" role="button">
           Удалить
         </a>
         {% endif %}
+        
     </div>
 </div>
 {% endfor %}
