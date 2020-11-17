@@ -194,7 +194,7 @@ class StaticViewTests(TestCase):
                 edit_post,
                 'form',
                 'image',
-                'Upload a valid image. The file you uploaded was either not an image or a corrupted image.',
+                'Загрузите правильное изображение. Файл, который вы загрузили, поврежден или не является изображением.',
                 'Поле "image" в форме не выдает ошибок при загрузки не изображений'
                 )
 

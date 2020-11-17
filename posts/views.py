@@ -48,11 +48,11 @@ def new_post(request):
         return redirect('index')
     return render(request, 'new_post.html', {'form': form, 'edit': False})
 
-
 def profile(request, username):
     """displaying the user's profile page with their posts,
     the number of followers and following
     """
+    user = request.user
     author = get_object_or_404(User, username=username)
     posts = author.posts.all()
     paginator = Paginator(posts, 5)
@@ -60,6 +60,10 @@ def profile(request, username):
     page = paginator.get_page(page_number)
     follower = author.follower.count()
     following = author.following.count()
+    if request.user.is_authenticated == True:
+        follow = Follow.objects.filter(author=author,user=user).exists()
+    else:
+        follow = ''
     return render(
         request,
         'profile.html',
@@ -69,7 +73,8 @@ def profile(request, username):
             'paginator': paginator,
             'page': page,
             'follower': follower,
-            'following': following
+            'following': following,
+            'follow': follow
             }
         )
 
