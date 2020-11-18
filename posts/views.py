@@ -9,6 +9,7 @@ from django.views.decorators.cache import cache_page
 from .models import Post, Group, User, Comment, Follow
 from .forms import PostForm, CommentForm
 
+
 @cache_page(1 * 20, key_prefix="index_page")
 def index(request):
     """home page with a list of posts"""
@@ -48,6 +49,7 @@ def new_post(request):
         return redirect('index')
     return render(request, 'new_post.html', {'form': form, 'edit': False})
 
+
 def profile(request, username):
     """displaying the user's profile page with their posts,
     the number of followers and following
@@ -60,8 +62,8 @@ def profile(request, username):
     page = paginator.get_page(page_number)
     follower = author.follower.count()
     following = author.following.count()
-    if request.user.is_authenticated == True:
-        follow = Follow.objects.filter(author=author,user=user).exists()
+    if request.user.is_authenticated is True:
+        follow = Follow.objects.filter(author=author, user=user).exists()
     else:
         follow = ''
     return render(
@@ -106,7 +108,7 @@ def post_view(request, username, post_id):
 def post_edit(request, username, post_id):
     """edits the text, group, or image for a post"""
     post = get_object_or_404(Post, author__username=username, id=post_id)
-    form = PostForm(request.POST  or None, files=request.FILES or None, instance=post)
+    form = PostForm(request.POST or None, files=request.FILES or None, instance=post)
     if form.is_valid():
         form.save()
         return redirect('post', username=post.author.username, post_id=post.id)

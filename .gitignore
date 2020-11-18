@@ -27,3 +27,9 @@ sent_emails/
 
 img.png
 test.txt
+
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover 

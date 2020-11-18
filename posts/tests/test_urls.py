@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
+from django.urls import reverse
 from posts.models import Post
 
 User = get_user_model()
@@ -29,7 +30,7 @@ class StaticURLTests(TestCase):
         self.assertEqual(
             response.status_code,
             200,
-            'Страница нового поста доступна зарегистрированному пользователю'
+            'Страница нового поста не доступна зарегистрированному пользователю'
             )
 
     def test_unauthorized_user_newpage(self):
@@ -52,4 +53,4 @@ class StaticURLTests(TestCase):
             response.status_code,
             404,
             'Сервер не возвращает код 404, когда страница не найдена.'
-            )   
+            )
