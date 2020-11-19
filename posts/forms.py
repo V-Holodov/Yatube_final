@@ -6,15 +6,15 @@ class PostForm(forms.ModelForm):
     class Meta:
         model = Post
         fields = ['text', 'group', 'image']
-        labels = {
-            'text': 'Текст',
-            'group': 'Группа',
-            'image': 'Картинка'
-        }
-        help_texts = {
-            'text': 'Поле обязательно для ввода текста',
-            'group': 'Выбор группы'
-        }
+        # labels = {
+        #     'text': 'Текст',
+        #     'group': 'Группа',
+        #     'image': 'Картинка'
+        # }
+        # help_texts = {
+        #     'text': 'Поле обязательно для ввода текста',
+        #     'group': 'Выбор группы'
+        # }
         exclude = ['author']
 
     def clean_text(self):

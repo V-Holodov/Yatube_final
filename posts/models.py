@@ -15,7 +15,11 @@ class Group(models.Model):
 
 
 class Post(models.Model):
-    text = models.TextField(validators=[validate_not_empty])
+    text = models.TextField(
+        verbose_name='Текст поста',
+        help_text='Поле обязательно для ввода текста'
+        validators=[validate_not_empty]
+        )
     pub_date = models.DateTimeField(
         "date published",
         auto_now_add=True,
@@ -26,11 +30,18 @@ class Post(models.Model):
         related_name="posts"
         )
     group = models.ForeignKey(
+        verbose_name='Группа',
         Group, on_delete=models.SET_NULL,
         blank=True, null=True,
-        related_name="posts"
+        related_name="posts",
+        help_text='Выбирите группу'
         )
-    image = models.ImageField(upload_to='posts/', blank=True, null=True)
+    image = models.ImageField(
+        verbose_name='Картинка',
+        help_text='Загрузите картинку',
+        upload_to='posts/',
+        blank=True, null=True
+        )
 
     class Meta:
         ordering = ['-pub_date']
