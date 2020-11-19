@@ -1,23 +1,38 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from .validators import validate_not_empty
+from pytils.translit import slugify
 
 User = get_user_model()
 
 
 class Group(models.Model):
-    title = models.CharField(max_length=200)
-    slug = models.SlugField(max_length=70, unique=True)
+    title = models.CharField(
+        verbose_name='Группа',
+        help_text='Название группы',
+        max_length=200
+        )
+    slug = models.SlugField(
+        verbose_name='Слаг',
+        help_text=('Укажите адрес для страницы задачи. Используйте только '
+                   'латиницу, цифры, дефисы и знаки подчёркивания'),
+        max_length=70, unique=True
+        )
     description = models.TextField()
 
     def __str__(self):
         return self.title
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)[:100]
+        super().save(*args, **kwargs)
+
 
 class Post(models.Model):
     text = models.TextField(
-        verbose_name='Текст поста',
-        help_text='Поле обязательно для ввода текста'
+        verbose_name='Текст',
+        help_text='Поле обязательно для ввода текста',
         validators=[validate_not_empty]
         )
     pub_date = models.DateTimeField(
@@ -30,8 +45,8 @@ class Post(models.Model):
         related_name="posts"
         )
     group = models.ForeignKey(
-        verbose_name='Группа',
         Group, on_delete=models.SET_NULL,
+        verbose_name='Группа',
         blank=True, null=True,
         related_name="posts",
         help_text='Выбирите группу'
@@ -47,7 +62,7 @@ class Post(models.Model):
         ordering = ['-pub_date']
 
     def __str__(self):
-        return self.text
+        return self.text[:15]
 
 
 class Comment(models.Model):
