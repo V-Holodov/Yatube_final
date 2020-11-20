@@ -14,7 +14,7 @@ class Group(models.Model):
         )
     slug = models.SlugField(
         verbose_name='Слаг',
-        help_text=('Укажите адрес для страницы задачи. Используйте только '
+        help_text=('Укажите адрес для страницы группы. Используйте только '
                    'латиницу, цифры, дефисы и знаки подчёркивания'),
         max_length=70, unique=True
         )
