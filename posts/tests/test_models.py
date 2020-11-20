@@ -65,7 +65,7 @@ class ModelTest(TestCase):
         group = ModelTest.group
         field_verboses = {
             'title': 'Название группы',
-            'slug': ('Укажите адрес для страницы задачи. Используйте только '
+            'slug': ('Укажите адрес для страницы группы. Используйте только '
                      'латиницу, цифры, дефисы и знаки подчёркивания')
             }
         for value, expected in field_verboses.items():
