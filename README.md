@@ -49,7 +49,6 @@ python manage.py runserver
 ```bash
 python manage.py load_ingredient
 ```
-
 ## Об авторе
-Проект подготовлен выпускником бэкенд-факультета Яндекс-Практикума [https://www.linkedin.com/in/v-holodov/] (Виталием Холодовым).
+Проект подготовлен выпускником бэкенд-факультета Яндекс-Практикума [Виталием Холодовым ](https://www.linkedin.com/in/v-holodov/).
 
